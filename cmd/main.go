@@ -14,8 +14,6 @@ import (
 
 func main() {
 
-	log.Println("Golang erlang Port Running ....")
-
 	//Manage stop
 	var gracefulStop = make(chan os.Signal)
 	signal.Notify(gracefulStop, syscall.SIGTERM)

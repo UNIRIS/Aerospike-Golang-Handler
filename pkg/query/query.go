@@ -19,11 +19,24 @@ const (
 
 //DatabaseQuery describe a database query
 type DatabaseQuery struct {
+	QueryID   string
 	Type      string
 	Namespace string
 	Set       string
 	Key       string
 	Bins      []Bin
+}
+
+//DatabaseGetReply describe a database reply for a get request
+type DatabaseGetReply struct {
+	QueryID string
+	Bins    []Bin
+}
+
+//DatabasePutReply describe a database reply for a put request
+type DatabasePutReply struct {
+	QueryID string
+	Key     string
 }
 
 //Bin describe a bin
@@ -39,6 +52,10 @@ func NewDatabaseQuery(queryJSON string) (DatabaseQuery, error) {
 	err := json.Unmarshal([]byte(queryJSON), &dq)
 	if err != nil {
 		return dq, err
+	}
+
+	if dq.QueryID == "" {
+		return dq, errors.New(ErrorMalformedQuery)
 	}
 
 	if (dq.Type != "get") && (dq.Type != "put") {
@@ -57,16 +74,19 @@ func NewDatabaseQuery(queryJSON string) (DatabaseQuery, error) {
 }
 
 //ExecuteGetQuery execute the get query on the db
-func (dq DatabaseQuery) ExecuteGetQuery() (aero.BinMap, error) {
+func (dq DatabaseQuery) ExecuteGetQuery() (string, error) {
+	var bin Bin
+	var dgr DatabaseGetReply
+	var bins []Bin
 
 	client, err := aero.NewClient("127.0.0.1", 3000)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	key, err := aero.NewKey(dq.Namespace, dq.Set, dq.Key)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	policy := aero.NewPolicy()
@@ -74,10 +94,26 @@ func (dq DatabaseQuery) ExecuteGetQuery() (aero.BinMap, error) {
 
 	rec, err := client.Get(policy, key)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return rec.Bins, nil
+	for k, b := range rec.Bins {
+		bin.BinName = k
+		bin.BinValue = b.(string)
+		bins = append(bins, bin)
+	}
+
+	dgr = DatabaseGetReply{
+		QueryID: dq.QueryID,
+		Bins:    bins,
+	}
+
+	res, err := json.Marshal(dgr)
+	if err != nil {
+		return "", err
+	}
+
+	return string(res), nil
 }
 
 //ExecutePutQuery execute the put query on the db
@@ -85,12 +121,12 @@ func (dq DatabaseQuery) ExecutePutQuery() (string, error) {
 
 	client, err := aero.NewClient("127.0.0.1", 3000)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	key, err := aero.NewKey(dq.Namespace, dq.Set, dq.Key)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	policy := aero.NewWritePolicy(0, 0)
@@ -107,6 +143,15 @@ func (dq DatabaseQuery) ExecutePutQuery() (string, error) {
 		panic(err)
 	}
 
-	return key.String(), nil
+	dpr := DatabasePutReply{
+		QueryID: dq.QueryID,
+		Key:     key.String(),
+	}
+
+	res, err := json.Marshal(dpr)
+	if err != nil {
+		return "", err
+	}
+	return string(res), nil
 
 }
