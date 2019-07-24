@@ -11,10 +11,10 @@ import (
 const (
 
 	//ErrorUnsupportedQueryType is returned when the query type is not recognized
-	ErrorUnsupportedQueryType = "Error Unsupported Query type"
+	ErrorUnsupportedQueryType = "[ERROR] Unsupported Query type"
 
 	//ErrorMalformedQuery is returned when a malformed query is received
-	ErrorMalformedQuery = "Error Malformed Query"
+	ErrorMalformedQuery = "[ERROR] Malformed Query"
 )
 
 //DatabaseQuery describe a database query
