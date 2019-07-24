@@ -22,8 +22,8 @@ func main() {
 	signal.Notify(gracefulStop, syscall.SIGINT)
 	go func() {
 		s := <-gracefulStop
-		fmt.Println(fmt.Sprintf("RECEIVED SIGNAL: %s", s))
-		fmt.Println("Stopping ...")
+		log.Println(fmt.Sprintf("RECEIVED SIGNAL: %s", s))
+		log.Println("Stopping ...")
 		os.Exit(0)
 	}()
 
@@ -32,22 +32,22 @@ func main() {
 	for scanner.Scan() {
 		dq, err := query.NewDatabaseQuery(scanner.Text())
 		if err != nil {
-			log.Println("[ERROR] " + err.Error())
+			fmt.Println("[ERROR] " + err.Error())
 		} else {
 			if dq.Type == "get" {
 				b, err := dq.ExecuteGetQuery()
 				if err != nil {
-					log.Println("[ERROR] " + err.Error())
+					fmt.Println("[ERROR] " + err.Error())
 				}
-				log.Println(b)
+				fmt.Println(b)
 			}
 
 			if dq.Type == "put" {
 				k, err := dq.ExecutePutQuery()
 				if err != nil {
-					log.Println("[ERROR] " + err.Error())
+					fmt.Println("[ERROR] " + err.Error())
 				}
-				log.Println(k)
+				fmt.Println(k)
 			}
 		}
 	}
@@ -58,6 +58,6 @@ func main() {
 		os.Exit(0)
 	}
 	if err != nil {
-		log.Println("[ERROR] " + err.Error())
+		fmt.Println("[ERROR] " + err.Error())
 	}
 }
