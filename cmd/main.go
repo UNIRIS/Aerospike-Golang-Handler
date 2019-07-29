@@ -32,7 +32,7 @@ func main() {
 		if err != nil {
 			fmt.Println("[ERROR] " + err.Error())
 		} else {
-			if dq.Type == "get" {
+			if dq.Data.Type == "get" {
 				b, err := dq.ExecuteGetQuery()
 				if err != nil {
 					fmt.Println("[ERROR] " + err.Error())
@@ -40,7 +40,7 @@ func main() {
 				fmt.Println(b)
 			}
 
-			if dq.Type == "put" {
+			if dq.Data.Type == "put" {
 				k, err := dq.ExecutePutQuery()
 				if err != nil {
 					fmt.Println("[ERROR] " + err.Error())
@@ -50,7 +50,7 @@ func main() {
 		}
 	}
 
-	//Handeling errors
+	//Handling errors
 	err := scanner.Err()
 	if err == io.EOF {
 		os.Exit(0)

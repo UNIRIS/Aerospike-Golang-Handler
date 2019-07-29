@@ -19,7 +19,12 @@ const (
 
 //DatabaseQuery describe a database query
 type DatabaseQuery struct {
-	QueryID   string
+	ID   string
+	Data Data
+}
+
+//Data describe the data structure of a query
+type Data struct {
 	Type      string
 	Namespace string
 	Set       string
@@ -29,14 +34,14 @@ type DatabaseQuery struct {
 
 //DatabaseGetReply describe a database reply for a get request
 type DatabaseGetReply struct {
-	QueryID string
-	Bins    []Bin
+	ID   string
+	Bins []Bin
 }
 
 //DatabasePutReply describe a database reply for a put request
 type DatabasePutReply struct {
-	QueryID string
-	Key     string
+	ID  string
+	Key string
 }
 
 //Bin describe a bin
@@ -54,19 +59,19 @@ func NewDatabaseQuery(queryJSON string) (DatabaseQuery, error) {
 		return dq, err
 	}
 
-	if dq.QueryID == "" {
+	if dq.ID == "" {
 		return dq, errors.New(ErrorMalformedQuery)
 	}
 
-	if (dq.Type != "get") && (dq.Type != "put") {
+	if (dq.Data.Type != "get") && (dq.Data.Type != "put") {
 		return dq, errors.New(ErrorUnsupportedQueryType)
 	}
 
-	if dq.Namespace == "" || dq.Set == "" || dq.Key == "" {
+	if dq.Data.Namespace == "" || dq.Data.Set == "" || dq.Data.Key == "" {
 		return dq, errors.New(ErrorMalformedQuery)
 	}
 
-	if dq.Type == "put" && len(dq.Bins) == 0 {
+	if dq.Data.Type == "put" && len(dq.Data.Bins) == 0 {
 		return dq, errors.New(ErrorMalformedQuery)
 	}
 
@@ -84,7 +89,7 @@ func (dq DatabaseQuery) ExecuteGetQuery() (string, error) {
 		return "", err
 	}
 
-	key, err := aero.NewKey(dq.Namespace, dq.Set, dq.Key)
+	key, err := aero.NewKey(dq.Data.Namespace, dq.Data.Set, dq.Data.Key)
 	if err != nil {
 		return "", err
 	}
@@ -104,8 +109,8 @@ func (dq DatabaseQuery) ExecuteGetQuery() (string, error) {
 	}
 
 	dgr = DatabaseGetReply{
-		QueryID: dq.QueryID,
-		Bins:    bins,
+		ID:   dq.ID,
+		Bins: bins,
 	}
 
 	res, err := json.Marshal(dgr)
@@ -124,7 +129,7 @@ func (dq DatabaseQuery) ExecutePutQuery() (string, error) {
 		return "", err
 	}
 
-	key, err := aero.NewKey(dq.Namespace, dq.Set, dq.Key)
+	key, err := aero.NewKey(dq.Data.Namespace, dq.Data.Set, dq.Data.Key)
 	if err != nil {
 		return "", err
 	}
@@ -132,9 +137,9 @@ func (dq DatabaseQuery) ExecutePutQuery() (string, error) {
 	policy := aero.NewWritePolicy(0, 0)
 	policy.SocketTimeout = 50 * time.Millisecond
 
-	var bins = make(aero.BinMap, len(dq.Bins))
+	var bins = make(aero.BinMap, len(dq.Data.Bins))
 
-	for _, b := range dq.Bins {
+	for _, b := range dq.Data.Bins {
 		bins[b.BinName] = b.BinValue
 	}
 
@@ -144,8 +149,8 @@ func (dq DatabaseQuery) ExecutePutQuery() (string, error) {
 	}
 
 	dpr := DatabasePutReply{
-		QueryID: dq.QueryID,
-		Key:     key.String(),
+		ID:  dq.ID,
+		Key: key.String(),
 	}
 
 	res, err := json.Marshal(dpr)
