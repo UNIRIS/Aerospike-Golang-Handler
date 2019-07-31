@@ -35,13 +35,13 @@ type Data struct {
 //DatabaseGetReply describe a database reply for a get request
 type DatabaseGetReply struct {
 	ID   string
-	Bins []Bin
+	Data []Bin
 }
 
 //DatabasePutReply describe a database reply for a put request
 type DatabasePutReply struct {
-	ID  string
-	Key string
+	ID   string
+	Data string
 }
 
 //Bin describe a bin
@@ -58,24 +58,27 @@ func NewDatabaseQuery(queryJSON string) (DatabaseQuery, error) {
 	if err != nil {
 		return dq, err
 	}
+	return dq, nil
+}
 
+//CheckValues check the value of the requested query
+func (dq DatabaseQuery) CheckValues() error {
 	if dq.ID == "" {
-		return dq, errors.New(ErrorMalformedQuery)
+		return errors.New(ErrorMalformedQuery)
 	}
 
 	if (dq.Data.Type != "get") && (dq.Data.Type != "put") {
-		return dq, errors.New(ErrorUnsupportedQueryType)
+		return errors.New(ErrorUnsupportedQueryType)
 	}
 
 	if dq.Data.Namespace == "" || dq.Data.Set == "" || dq.Data.Key == "" {
-		return dq, errors.New(ErrorMalformedQuery)
+		return errors.New(ErrorMalformedQuery)
 	}
 
 	if dq.Data.Type == "put" && len(dq.Data.Bins) == 0 {
-		return dq, errors.New(ErrorMalformedQuery)
+		return errors.New(ErrorMalformedQuery)
 	}
-
-	return dq, nil
+	return nil
 }
 
 //ExecuteGetQuery execute the get query on the db
@@ -110,7 +113,7 @@ func (dq DatabaseQuery) ExecuteGetQuery() (string, error) {
 
 	dgr = DatabaseGetReply{
 		ID:   dq.ID,
-		Bins: bins,
+		Data: bins,
 	}
 
 	res, err := json.Marshal(dgr)
@@ -149,8 +152,8 @@ func (dq DatabaseQuery) ExecutePutQuery() (string, error) {
 	}
 
 	dpr := DatabasePutReply{
-		ID:  dq.ID,
-		Key: key.String(),
+		ID:   dq.ID,
+		Data: key.String(),
 	}
 
 	res, err := json.Marshal(dpr)

@@ -30,22 +30,28 @@ func main() {
 	for scanner.Scan() {
 		dq, err := query.NewDatabaseQuery(scanner.Text())
 		if err != nil {
-			fmt.Println("[ERROR] " + err.Error())
+			fmt.Println(query.NewError("0", err.Error()).ToString())
 		} else {
-			if dq.Data.Type == "get" {
-				b, err := dq.ExecuteGetQuery()
-				if err != nil {
-					fmt.Println("[ERROR] " + err.Error())
-				}
-				fmt.Println(b)
-			}
+			err := dq.CheckValues()
+			if err != nil {
+				fmt.Println(query.NewError(dq.ID, err.Error()).ToString())
+			} else {
+				if dq.Data.Type == "get" {
 
-			if dq.Data.Type == "put" {
-				k, err := dq.ExecutePutQuery()
-				if err != nil {
-					fmt.Println("[ERROR] " + err.Error())
+					b, err := dq.ExecuteGetQuery()
+					if err != nil {
+						fmt.Println(query.NewError(dq.ID, err.Error()).ToString())
+					}
+					fmt.Println(b)
 				}
-				fmt.Println(k)
+
+				if dq.Data.Type == "put" {
+					k, err := dq.ExecutePutQuery()
+					if err != nil {
+						fmt.Println(query.NewError(dq.ID, err.Error()).ToString())
+					}
+					fmt.Println(k)
+				}
 			}
 		}
 	}
@@ -56,6 +62,6 @@ func main() {
 		os.Exit(0)
 	}
 	if err != nil {
-		fmt.Println("[ERROR] " + err.Error())
+		log.Fatal(err.Error())
 	}
 }
