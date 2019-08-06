@@ -148,7 +148,7 @@ func (dq DatabaseQuery) ExecutePutQuery() (string, error) {
 
 	err = client.Put(policy, key, bins)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	dpr := DatabasePutReply{
